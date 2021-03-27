@@ -268,7 +268,7 @@ food-init-count
 food-init-count
 0
 20
-10.0
+100.0
 1
 1
 NIL
