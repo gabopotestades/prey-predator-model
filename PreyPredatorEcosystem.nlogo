@@ -1,12 +1,14 @@
+; Initialize breeds for the ecosystem
 breed [foxes fox]
 breed [rabbits rabbit]
 breed [foods food]
 
-foxes-own [energy
-           nearest-prey]
-rabbits-own [energy
-             nearest-food]
+; Initialize internal values per turtle (not used by leaves)
+turtles-own [energy
+             field-of-vision
+             nearest-neighbor]
 
+; Initializes the model
 to setup
   clear-all
   reset-ticks
@@ -42,48 +44,112 @@ to setup
   ]
 end
 
+; Runs the model at each time step
 to go
 
+  ;Stop the model if no foxes or rabbits are alive
+  if not any? foxes or not any? rabbits [stop]
+
+  ;Call to spawn food based on tick interval
   spawn-food
 
+  ; Moves the foxes around and loses energy each time step
   ask foxes
   [
+
+    ; Randomized movement and energy consumption (based on fixed fox-energy-loss slider)
     ifelse coin-flip? [right random 100][left random 100]
     forward random 10
-
     set energy (energy - fox-energy-loss)
-    if energy < 1 [die]
-    if fox-prob-birth >= random 100 and fox-prob-birth > 0
+
+    ; Check if a rabbit is near to eat
+    fox-field-of-vision
+    if any? field-of-vision
     [
-      hatch-foxes 1 [set energy 100]
+      get-nearest-turtle
+
+      if is-rabbit? nearest-neighbor
+      [
+        ask nearest-neighbor [die]
+        set energy (energy + fox-energy-loss)
+        if energy > 100 [set energy 100]
+      ]
     ]
+
+    ; If the fox has no energy left, it dies
+    ifelse energy < 1 [die]
+    [
+      if fox-prob-birth >= random 100 and fox-prob-birth > 0
+      [
+        hatch-foxes 1 [set energy 100]
+      ]
+    ]
+
 
   ]
 
+  ; Moves the rabbits around and loses energy each time step
   ask rabbits
   [
-    ifelse coin-flip? [right random 100][left random 100]
-    forward random 10
 
+    ; Randomized movement and energy consumption (based on fixed rabbit-energy-loss slider)
+    ifelse coin-flip? [right random 100][left random 100]
+    forward random 5
     set energy (energy - rabbit-energy-loss)
-    if energy < 1 [die]
-    if rabbit-prob-birth >= random 100 and rabbit-prob-birth > 0
+
+    ; Check if a leaf is near to eat
+    rabbit-field-of-vision
+    if any? field-of-vision
     [
-      hatch-rabbits 1 [set energy 100]
+      get-nearest-turtle
+
+      if is-food? nearest-neighbor
+      [
+        ask nearest-neighbor [die]
+        set energy (energy + rabbit-energy-loss)
+        if energy > 100 [set energy 100]
+      ]
     ]
+
+    ; If the turtle has no energy left, it dies
+    ifelse energy < 1 [die]
+    [
+      if rabbit-prob-birth >= random 100 and rabbit-prob-birth > 0
+      [
+        hatch-rabbits 1 [set energy 100]
+      ]
+    ]
+
   ]
 
   tick
 end
 
+; Gets all turtles in the vision of the fox
+to fox-field-of-vision
+  set field-of-vision other rabbits in-radius fox-vision
+end
+
+; Gets all turtles in the vision of the rabbit
+to rabbit-field-of-vision
+  set field-of-vision other foods in-radius rabbit-vision
+end
+
+; Gets the nearest turtle of a current turtle if any
+to get-nearest-turtle
+  set nearest-neighbor min-one-of field-of-vision [distance myself]
+end
+
+; Randomizes the direction of a fox/rabbit
 to-report coin-flip?
   report random 2 = 0
 end
 
+; Spawns food based on the interval setup in the sliders for food
 to spawn-food
-  if ticks >= food-regen and ticks mod food-regen = 0
+  if ticks >= food-regen-interval and ticks mod food-regen-interval = 0
   [
-    create-foods 1
+    create-foods food-count-regen
     [
       set size 2.5
       set shape "leaf"
@@ -94,10 +160,10 @@ to spawn-food
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
-414
-30
-851
-468
+573
+25
+1010
+463
 -1
 -1
 13.0
@@ -121,10 +187,10 @@ ticks
 30.0
 
 BUTTON
-233
-41
-297
-74
+264
+246
+328
+279
 Setup
 setup
 NIL
@@ -138,10 +204,10 @@ NIL
 1
 
 BUTTON
-313
-41
-376
-74
+344
+246
+407
+279
 Go
 go
 T
@@ -162,8 +228,8 @@ SLIDER
 fox-pop
 fox-pop
 1
-10
-1.0
+20
+8.0
 1
 1
 NIL
@@ -177,8 +243,8 @@ SLIDER
 rabbit-pop
 rabbit-pop
 1
-10
-1.0
+20
+20.0
 1
 1
 NIL
@@ -192,8 +258,8 @@ SLIDER
 fox-energy-loss
 fox-energy-loss
 0
-10
-10.0
+20
+20.0
 1
 1
 NIL
@@ -207,7 +273,7 @@ SLIDER
 rabbit-energy-loss
 rabbit-energy-loss
 0
-10
+20
 10.0
 1
 1
@@ -238,21 +304,6 @@ rabbit-prob-birth
 rabbit-prob-birth
 0
 100
-10.0
-1
-1
-NIL
-HORIZONTAL
-
-SLIDER
-4
-301
-176
-334
-food-regen
-food-regen
-1
-15
 15.0
 1
 1
@@ -260,10 +311,25 @@ NIL
 HORIZONTAL
 
 SLIDER
-4
-343
-176
-376
+249
+188
+421
+221
+food-regen-interval
+food-regen-interval
+1
+10
+2.0
+1
+1
+NIL
+HORIZONTAL
+
+SLIDER
+250
+104
+422
+137
 food-init-count
 food-init-count
 0
@@ -274,42 +340,153 @@ food-init-count
 NIL
 HORIZONTAL
 
+SLIDER
+250
+11
+422
+44
+fox-vision
+fox-vision
+1.0
+10.0
+4.5
+0.5
+1
+NIL
+HORIZONTAL
+
+SLIDER
+251
+51
+423
+84
+rabbit-vision
+rabbit-vision
+1.0
+10.0
+4.5
+0.5
+1
+NIL
+HORIZONTAL
+
+PLOT
+9
+302
+209
+452
+Number of Foxes
+Time
+Foxes
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot count foxes"
+
+PLOT
+239
+300
+439
+450
+Number of Rabbits
+Time
+Rabbits
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"default" 1.0 0 -16777216 true "" "plot count rabbits"
+
+SLIDER
+249
+147
+421
+180
+food-count-regen
+food-count-regen
+0
+50
+3.0
+1
+1
+NIL
+HORIZONTAL
+
 @#$#@#$#@
 ## WHAT IS IT?
 
-(a general understanding of what the model is trying to show or explain)
+A fox-rabbit-leaf ecosystem where a fox tries to eat rabbits, while rabbits try to eat the leaves.
 
 ## HOW IT WORKS
 
-(what rules the agents use to create the overall behavior of the model)
+A initial population of foxes, rabbits and leaves are spawned. The animals both move and lose energy, they gain energy when a fox eats a rabbit or a rabbit eats a leaf. Each rabbit and fox have 100 energy at the start of the model. 
+
+When they eat food, they gain the energy equivalent to one movement.
+
+The model stops when all rabbits or foxes are gone. Comments are supplied in the code tab.
 
 ## HOW TO USE IT
 
-(how to use the model, including a description of each of the items in the Interface tab)
+fox-pop: The initial population of the foxes.
+rabbit-pop: The initial population of the rabbits.
+
+fox-energy-loss: Amount of energy lost at each time step for the foxes breed.
+rabbit-energy-loss: Amount of energy lost at each time step for the rabbits breed.
+
+fox-prob-birth: Probability of a fox to produce at a time step.
+rabbit-prob-birth: Probability of a rabbit to produce at a time step.
+
+fox-vision: The radius (in patches) of the allowable rabbits to eat (one at each time step).
+rabbit-vision: The radius (in patches) of the allowable leaves to eat (one at each time step).
+
+food-init-count: The initial number of leaves in the model upon setup.
+food-count-regen: The number of leaves spawned each regeneration interval.
+food-regen-interval: Regenerates the food if the tick counter is divisible by this number.
 
 ## THINGS TO NOTICE
 
-(suggested things for the user to notice while running the model)
+The suggest amount of foxes are less than rabbits to get a more interactive result.
 
 ## THINGS TO TRY
 
-(suggested things for the user to try to do (move sliders, switches, etc.) with the model)
+Try the following parameters for somewhat unpredictable results:
+
+fox-pop: 8
+rabbit-pop: 8
+
+fox-energy-loss: 20
+rabbit-energy-loss: 10
+
+fox-prob-birth: 10
+rabbit-prob-birth: 15
+
+fox-vision: 4.5
+rabbit-vision: 4.5
+
+food-init-count: 10
+food-count-regen: 3
+food-regen-interval: 2
 
 ## EXTENDING THE MODEL
 
-(suggested things to add or change in the Code tab to make the model more complicated, detailed, accurate, etc.)
+To extend the model, other turtles might be added to the ecosystem to simulate more interesting interactions.
 
 ## NETLOGO FEATURES
 
-(interesting or unusual features of NetLogo that the model uses, particularly in the Code tab; or where workarounds were needed for missing features)
-
-## RELATED MODELS
-
-(models in the NetLogo Models Library and elsewhere which are of related interest)
+Uses primary NetLogo features like turtles and randomness.
 
 ## CREDITS AND REFERENCES
 
-(a reference to the model's URL on the web if it has one, as well as any other necessary credits, citations, and links)
+Credits to the built-in flocking model of NetLogo under Biology.
 @#$#@#$#@
 default
 true
