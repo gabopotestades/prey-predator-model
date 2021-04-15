@@ -188,9 +188,9 @@ ticks
 
 BUTTON
 264
-246
+247
 328
-279
+280
 Setup
 setup
 NIL
@@ -205,9 +205,9 @@ NIL
 
 BUTTON
 344
-246
+247
 407
-279
+280
 Go
 go
 T
@@ -229,7 +229,7 @@ fox-pop
 fox-pop
 1
 20
-8.0
+4.0
 1
 1
 NIL
@@ -274,7 +274,7 @@ rabbit-energy-loss
 rabbit-energy-loss
 0
 20
-10.0
+15.0
 1
 1
 NIL
@@ -304,7 +304,7 @@ rabbit-prob-birth
 rabbit-prob-birth
 0
 100
-15.0
+10.0
 1
 1
 NIL
@@ -334,7 +334,7 @@ food-init-count
 food-init-count
 0
 20
-10.0
+20.0
 1
 1
 NIL
@@ -349,7 +349,7 @@ fox-vision
 fox-vision
 1.0
 10.0
-4.5
+3.5
 0.5
 1
 NIL
@@ -364,7 +364,7 @@ rabbit-vision
 rabbit-vision
 1.0
 10.0
-4.5
+3.0
 0.5
 1
 NIL
@@ -373,11 +373,11 @@ HORIZONTAL
 PLOT
 9
 302
-209
-452
-Number of Foxes
+529
+476
+Population
 Time
-Foxes
+Count
 0.0
 10.0
 0.0
@@ -386,25 +386,8 @@ true
 false
 "" ""
 PENS
-"default" 1.0 0 -16777216 true "" "plot count foxes"
-
-PLOT
-239
-300
-439
-450
-Number of Rabbits
-Time
-Rabbits
-0.0
-10.0
-0.0
-10.0
-true
-false
-"" ""
-PENS
-"default" 1.0 0 -16777216 true "" "plot count rabbits"
+"default" 1.0 0 -955883 true "" "plot count foxes"
+"pen-1" 1.0 0 -10899396 true "" "plot count rabbits"
 
 SLIDER
 249
@@ -415,7 +398,7 @@ food-count-regen
 food-count-regen
 0
 50
-3.0
+38.0
 1
 1
 NIL
